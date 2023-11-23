@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dollar Scraper</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h1>Dollar Scraper</h1>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <p class="text-right">Last Update: {{ scraper.last_update }}</p>
+            </div>
+        </div>
+        <!-- Dollar Price Archive Table -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h2>Dollar Price Archive</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            {% for col in scraper.p2e_dpa_col_names_map.values() %}
+                                <th>{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data_dpa %}
+                            <tr>
+                                {% for value in row %}
+                                    {% if '+' in value %}
+                                        <td style="background-color: lightgreen;">{{ value }}</td>
+                                    {% elif '-' in value %}
+                                        {% if not ('Date' in col or 'Time' in col) %}
+                                            <td style="background-color: lightcoral;">{{ value }}</td>
+                                        {% else %}
+                                            <td>{{ value }}</td>
+                                        {% endif %}
+                                    {% else %}
+                                        <td>{{ value }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- Dollar Performance Table -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h2>Dollar Performance</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            {% for col in scraper.p2e_dp_col_names_map.values() %}
+                                <th>{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data_dp %}
+                            <tr>
+                                {% for value in row %}
+                                    {% if '+' in value %}
+                                        <td style="background-color: lightgreen;">{{ value }}</td>
+                                    {% elif '-' in value %}
+                                        {% if not ('Name' in col or 'Inserted Time' in col) %}
+                                            <td style="background-color: lightcoral;">{{ value }}</td>
+                                        {% else %}
+                                            <td>{{ value }}</td>
+                                        {% endif %}
+                                    {% else %}
+                                        <td>{{ value }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Dollar Today Table -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h2>Dollar Today</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            {% for col in scraper.p2e_dt_col_names_map.values() %}
+                                <th>{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data_dt %}
+                            <tr>
+                                {% for value in row %}
+                                    {% if '+' in value %}
+                                        <td style="background-color: lightgreen;">{{ value }}</td>
+                                    {% elif '-' in value %}
+                                        {% if not ('Inserted Time' in col or 'Time' in col) %}
+                                            <td style="background-color: lightcoral;">{{ value }}</td>
+                                        {% else %}
+                                            <td>{{ value }}</td>
+                                        {% endif %}
+                                    {% else %}
+                                        <td>{{ value }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Dollar at a Glance Table -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h2>Dollar at a Glance</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            {% for col in scraper.p2e_dpag_col_names_map.values() %}
+                                <th>{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data_dpag %}
+                            <tr>
+                                {% for value in row %}
+                                    {% if '+' in value %}
+                                        <td style="background-color: lightgreen;">{{ value }}</td>
+                                    {% elif '-' in value %}
+                                        {% if not ('Date' in col or 'Time' in col) %}
+                                            <td style="background-color: lightcoral;">{{ value }}</td>
+                                        {% else %}
+                                            <td>{{ value }}</td>
+                                        {% endif %}
+                                    {% else %}
+                                        <td>{{ value }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
