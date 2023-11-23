@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dollar Scraper</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
@@ -19,30 +20,26 @@
                 <p class="text-right">Last Update: {{ scraper.last_update }}</p>
             </div>
         </div>
-        <!-- Dollar Price Archive Table -->
+        <!-- Dollar at a Glance Table -->
         <div class="row mt-3">
             <div class="col-md-12">
-                <h2>Dollar Price Archive</h2>
+                <h2>Dollar at a Glance</h2>
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            {% for col in scraper.p2e_dpa_col_names_map.values() %}
+                            {% for col in scraper.p2e_dpag_col_names_map.values() %}
                                 <th>{{ col }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
                     <tbody>
-                        {% for row in data_dpa %}
+                        {% for row in data_dpag %}
                             <tr>
                                 {% for value in row %}
                                     {% if '+' in value %}
                                         <td style="background-color: lightgreen;">{{ value }}</td>
-                                    {% elif '-' in value %}
-                                        {% if not ('Date' in col or 'Time' in col) %}
-                                            <td style="background-color: lightcoral;">{{ value }}</td>
-                                        {% else %}
-                                            <td>{{ value }}</td>
-                                        {% endif %}
+                                    {% elif ('-' in value) and (not (':' in value)) %}
+                                        <td style="background-color: lightcoral;">{{ value }}</td>
                                     {% else %}
                                         <td>{{ value }}</td>
                                     {% endif %}
@@ -53,8 +50,6 @@
                 </table>
             </div>
         </div>
-
-
         <!-- Dollar Performance Table -->
         <div class="row mt-3">
             <div class="col-md-12">
@@ -73,12 +68,43 @@
                                 {% for value in row %}
                                     {% if '+' in value %}
                                         <td style="background-color: lightgreen;">{{ value }}</td>
-                                    {% elif '-' in value %}
-                                        {% if not ('Name' in col or 'Inserted Time' in col) %}
-                                            <td style="background-color: lightcoral;">{{ value }}</td>
-                                        {% else %}
-                                            <td>{{ value }}</td>
-                                        {% endif %}
+                                    {% elif ('-' in value) and (not (':' in value) and not ('_' in value)) %}
+                                        <td style="background-color: lightcoral;">{{ value }}</td>
+                                    {% else %}
+                                        <td>{{ value }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Dollar Price History Bar Chart -->
+        <div class="col-md-12">
+            <h2>Dollar Price History Bar Chart</h2>
+            <canvas id="barChart" height="200"></canvas>
+        </div>
+        <!-- Dollar Price Archive Table -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h2>Dollar Price History Table</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            {% for col in scraper.p2e_dpa_col_names_map.values() %}
+                                <th>{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data_dpa %}
+                            <tr>
+                                {% for value in row %}
+                                    {% if '+' in value %}
+                                        <td style="background-color: lightgreen;">{{ value }}</td>
+                                    {% elif ('-' in value) and (not (':' in value)) %}
+                                        <td style="background-color: lightcoral;">{{ value }}</td>
                                     {% else %}
                                         <td>{{ value }}</td>
                                     {% endif %}
@@ -108,12 +134,8 @@
                                 {% for value in row %}
                                     {% if '+' in value %}
                                         <td style="background-color: lightgreen;">{{ value }}</td>
-                                    {% elif '-' in value %}
-                                        {% if not ('Inserted Time' in col or 'Time' in col) %}
-                                            <td style="background-color: lightcoral;">{{ value }}</td>
-                                        {% else %}
-                                            <td>{{ value }}</td>
-                                        {% endif %}
+                                    {% elif ('-' in value) and (not (':' in value)) %}
+                                        <td style="background-color: lightcoral;">{{ value }}</td>
                                     {% else %}
                                         <td>{{ value }}</td>
                                     {% endif %}
@@ -125,40 +147,83 @@
             </div>
         </div>
 
-        <!-- Dollar at a Glance Table -->
-        <div class="row mt-3">
-            <div class="col-md-12">
-                <h2>Dollar at a Glance</h2>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            {% for col in scraper.p2e_dpag_col_names_map.values() %}
-                                <th>{{ col }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in data_dpag %}
-                            <tr>
-                                {% for value in row %}
-                                    {% if '+' in value %}
-                                        <td style="background-color: lightgreen;">{{ value }}</td>
-                                    {% elif '-' in value %}
-                                        {% if not ('Date' in col or 'Time' in col) %}
-                                            <td style="background-color: lightcoral;">{{ value }}</td>
-                                        {% else %}
-                                            <td>{{ value }}</td>
-                                        {% endif %}
-                                    {% else %}
-                                        <td>{{ value }}</td>
-                                    {% endif %}
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
+
+<script>
+    // Assuming you have the necessary data for the bar chart
+    var dates = [];
+    var opening = [];
+    var minimum = [];
+    var maximum = [];
+    var closing = [];
+
+    // Extract data for the bar chart from data_dpa
+    {% for row in scraper.data_dpa %}
+    dates.push("{{ row[7] }}");
+    opening.push({{ row[0] | replace(',', '') }});
+    minimum.push({{ row[1] | replace(',', '') }});
+    maximum.push({{ row[2] | replace(',', '') }});
+    closing.push({{ row[3] | replace(',', '') }});
+    {% endfor %}
+
+    // Get the canvas element
+    var ctx = document.getElementById('barChart').getContext('2d');
+
+    // Create the bar chart
+    var barChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Opening',
+                    data: opening,
+                    backgroundColor: 'rgba(255, 99, 132, 0.8)', // Red
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Minimum',
+                    data: minimum,
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)', // Blue
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Maximum',
+                    data: maximum,
+                    backgroundColor: 'rgba(255, 206, 86, 0.8)', // Yellow
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Closing',
+                    data: closing,
+                    backgroundColor: 'rgba(75, 192, 192, 0.8)', // Green
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                },
+                // Line dataset for connecting points
+                {
+                    type: 'line',
+                    label: 'Connecting Line',
+                    data: closing,
+                    borderColor: 'rgba(0, 0, 0, 1)',
+                    borderWidth: 2,
+                    fill: false,
+                    yAxisID: 'y'
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+</script>
+
 </body>
 </html>

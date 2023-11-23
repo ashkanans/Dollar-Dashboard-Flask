@@ -158,31 +158,27 @@ class Scraper:
                         cols = row.find_all('td')
                         cols = [ele.text.strip() for ele in cols]
 
-                        # Convert string numbers to double
-                        for i in [1, 2, 3, 4, 5]:
-                            cols[i] = cols[i].replace(',', '')
-
                         # Extracting values with their signs
                         change_span_pos = row.find('span', {'class': 'high'})
                         if change_span_pos:
-                            change = float(change_span_pos.text.strip().replace(',', ''))
+                            change = change_span_pos.text.strip()
                             cols[4] = '+' + str(change)
                             change_span_pos.decompose()
 
                         percent_span_pos = row.find('span', {'class': 'high'})
                         if percent_span_pos:
-                            percent = percent_span_pos.text.strip().replace(',', '')
+                            percent = percent_span_pos.text.strip()
                             cols[5] = '+' + str(percent)
 
                         change_span_neg = row.find('span', {'class': 'low'})
                         if change_span_neg:
-                            change = float(change_span_neg.text.strip().replace(',', ''))
+                            change = change_span_neg.text.strip()
                             cols[4] = '-' + str(change)
                             change_span_neg.decompose()
 
                         percent_span_neg = row.find('span', {'class': 'low'})
                         if percent_span_neg:
-                            percent = percent_span_neg.text.strip().replace(',', '')
+                            percent = percent_span_neg.text.strip()
                             cols[5] = '-' + str(percent)
 
                         self.data_dpa.append(cols)
@@ -198,7 +194,7 @@ class Scraper:
                     for row in rows:
                         cols = row.find_all('td')
                         cols_values = [ele.text.strip() for ele in cols]
-                        cols_values[1] = cols_values[1].replace(',', '')
+                        cols_values[1] = cols_values[1]
 
                         text_left = row.find('td', {'class': 'text-left'})
                         pos_sign = text_left.find('span', {'class': 'high'})
@@ -226,7 +222,7 @@ class Scraper:
                     for row in rows:
                         cols = row.find_all('td')
                         for col in cols:
-                            col_value = col.text.strip().replace(',', '')
+                            col_value = col.text.strip()
                             pos_sign = col.find('span', {'class': 'high'})
                             neg_sign = col.find('span', {'class': 'low'})
                             if pos_sign:
@@ -252,7 +248,6 @@ class Scraper:
 
                         # Convert string numbers to double
                         for i in [1, 2, 3, 4, 5, 6]:
-                            cols_values[i] = float(cols_values[i].replace(',', ''))
 
                             pos_sign = cols[i].find('span', {'class': 'high'})
                             if pos_sign:
@@ -317,10 +312,6 @@ class Scraper:
 
         # Insert new data into the table or update existing data
         for row in data:
-            # Convert string numbers to double
-            # for i in range(len(row)):
-            #     if isinstance(row[i], str) and row[i].replace('.', '').replace('-', '').isdigit():
-            #         row[i] = float(row[i].replace(',', ''))
 
             # Add the time_inserted column
             row.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
