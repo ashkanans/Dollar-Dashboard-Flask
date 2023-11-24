@@ -212,7 +212,7 @@ class Scraper:
                     values[6] = ''.join(
                         self.persian_to_english_digit_map.get(char, char) for char in values[6])
                     # Add the date to the Time column
-                    values[6] = f"{datetime.now().strftime('%Y-%m-%d')}_{values[6]}"
+                    values[6] = f"{datetime.now().strftime('%Y-%m-%d')}"
                     self.data_dpag.append(values)
                     self._save_to_database(self.data_dpag, "dpag")
 
@@ -270,7 +270,7 @@ class Scraper:
         self.p2e_dp_col_names_map['inserted_time'] = 'Inserted Time'
         self.p2e_dt_col_names_map['inserted_time'] = 'Inserted Time'
         self.p2e_dpag_col_names_map['inserted_time'] = 'Inserted Time'
-        self.set_force_reload(True)
+
     def _save_to_database(self, data, table_name):
         conn = sqlite3.connect('scraper_data.db')
         cursor = conn.cursor()
@@ -353,19 +353,21 @@ class Scraper:
         conn.close()
         print(f"Data saved to database for {table_name}.")
 
-    def save_to_tsv(self):
-        output_folder = "query_results"
-        os.makedirs(output_folder, exist_ok=True)
-        df = pd.DataFrame(self.data,
-                          columns=['open', 'min', 'max', 'close', 'change', 'percent', 'date', 'date_shamsi'])
-        df.to_csv(output_folder + ".csv", sep='\t', index=False)
-        print("Data saved to file.")
-
     def load_from_database(self):
         self.data_dpa = self._load_table_from_database("dpa")
         self.data_dp = self._load_table_from_database("dp")
         self.data_dt = self._load_table_from_database("dt")
         self.data_dpag = self._load_table_from_database("dpag")
+
+        self.data_dpa = sorted(self.data_dpa, key=lambda row: row[7], reverse=True)
+        self.data_dp = [self.data_dp[-1]]
+        self.data_dt = sorted(self.data_dt, key=lambda row: row[1])
+        self.data_dpag = [self.data_dpag[-1]]
+
+        print(f"{len(self.data_dpa)} rows loaded from database for dpa.")
+        print(f"{len(self.data_dp)} rows loaded from database for dp.")
+        print(f"{len(self.data_dt)} rows loaded from database for dt.")
+        print(f"{len(self.data_dpag)} rows loaded from database for dpag.")
 
     def _load_table_from_database(self, table_name):
         conn = sqlite3.connect('scraper_data.db')

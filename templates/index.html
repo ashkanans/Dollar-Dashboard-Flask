@@ -21,21 +21,21 @@
         </div>
         <div class="row mt-3">
             <div class="col-md-12">
-                <p class="text-right">Last Update: {{ scraper.last_update }}</p>
+                <p class="text-right" id="last-update">Last Update: {{ scraper.last_update }}</p>
             </div>
         </div>
         <!-- Dollar at a Glance Table -->
         <div class="row mt-3">
             <div class="col-md-12">
                 <h2>Dollar at a Glance</h2>
-                <table class="table table-bordered">
+                <table id="dpag-table" class="table table-bordered">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dpag_col_names_map.values() %}
                                 <th>{{ col }}</th>
                             {% endfor %}
                         </tr>
-                    </thead>
+                    <tbody id="dpag-table-body">
                     <tbody>
                         {% for row in data_dpag %}
                             <tr>
@@ -58,7 +58,7 @@
         <div class="row mt-3">
             <div class="col-md-12">
                 <h2>Dollar Performance</h2>
-                <table class="table table-bordered">
+                <table id="dp-table" class="table table-bordered">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dp_col_names_map.values() %}
@@ -66,7 +66,7 @@
                             {% endfor %}
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="dp-table-body">
                         {% for row in data_dp %}
                             <tr>
                                 {% for value in row %}
@@ -93,7 +93,7 @@
         <div class="row mt-3">
             <div class="col-md-12">
                 <h2>Dollar Price History Table</h2>
-                <table id="dollar-price-table" class="table table-bordered">
+                <table id="dpa-table" class="table table-bordered">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dpa_col_names_map.values() %}
@@ -101,7 +101,7 @@
                             {% endfor %}
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="dpa-table-body">
                         {% for row in data_dpa %}
                             <tr>
                                 {% for value in row %}
@@ -129,7 +129,7 @@
         <div class="row mt-3">
             <div class="col-md-10">
                 <h2>Dollar Today</h2>
-                <table id="dollar-today-table" class="table table-bordered">
+                <table id="dt-table" class="table table-bordered">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dt_col_names_map.values() %}
@@ -137,7 +137,7 @@
                             {% endfor %}
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="dt-table-body">
                         {% for row in data_dt %}
                             <tr>
                                 {% for value in row %}
@@ -282,7 +282,7 @@
 
 <script>
     $(document).ready( function () {
-        $('#dollar-price-table').DataTable({
+        $('#dpa-table').DataTable({
             "paging": true,
             "pagingType": "simple",  // You can customize the pagination style
             "pageLength": 10  // Set the number of rows per page
@@ -292,7 +292,7 @@
 
 <script>
     $(document).ready( function () {
-        $('#dollar-today-table').DataTable({
+        $('#dt-table').DataTable({
             "paging": true,
             "pagingType": "simple",  // You can customize the pagination style
             "pageLength": 10  // Set the number of rows per page
@@ -300,6 +300,164 @@
     });
 </script>
 
+<script>
+// Function to update Dollar at a Glance Table-
+function updateDpTable(data) {
+    var tbody = $('#dp-table-body');
+    tbody.empty();  // Clear existing rows
 
+    $.each(data, function (index, row) {
+        var tr = $('<tr>');
+
+        $.each(row, function (index, value) {
+            var td = $('<td>');
+            if ('+' in value) {
+                td.css('background-color', 'lightgreen');
+            } else if ('-' in value && !(':' in value) && !('_' in value)) {
+                td.css('background-color', 'lightcoral');
+            }
+            td.text(value);
+            tr.append(td);
+        });
+
+        tbody.append(tr);
+    });
+}
+
+
+function updateDpagTable(data) {
+    var tbody = $('#dpag-table-body');
+    tbody.empty();  // Clear existing rows
+
+    $.each(data, function (index, row) {
+        var tr = $('<tr>');
+
+        $.each(row, function (index, value) {
+            var td = $('<td>');
+            if ('+' in value) {
+                td.css('background-color', 'lightgreen');
+            } else if ('-' in value && !(':' in value)) {
+                td.css('background-color', 'lightcoral');
+            }
+            td.text(value);
+            tr.append(td);
+        });
+    });
+}
+
+function updateDpaTable(data) {
+    var tbody = $('#dpa-table-body');
+    tbody.empty();  // Clear existing rows
+
+    $.each(data, function (index, row) {
+        var tr = $('<tr>');
+
+        $.each(row, function (index, value) {
+            var td = $('<td>');
+            // Customize the styling logic based on your data
+            if ('+' in value) {
+                td.css('background-color', 'lightgreen');
+            } else if ('-' in value && !(':' in value) && !('_' in value)) {
+                td.css('background-color', 'lightcoral');
+            }
+            td.text(value);
+            tr.append(td);
+        });
+
+        tbody.append(tr);
+    });
+}
+
+
+function updateDtTable(data) {
+    var tbody = $('#dt-table-body');
+    tbody.empty();  // Clear existing rows
+
+    $.each(data, function (index, row) {
+        var tr = $('<tr>');
+
+        $.each(row, function (index, value) {
+            var td = $('<td>');
+            if ('+' in value) {
+                td.css('background-color', 'lightgreen');
+            } else if ('-' in value && !(':' in value)) {
+                td.css('background-color', 'lightcoral');
+            }
+            td.text(value);
+            tr.append(td);
+        });
+
+        tbody.append(tr);
+    });
+}
+
+
+function updateBarChart(data) {
+    var times = [];
+    var price = [];
+
+    $.each(data, function (index, row) {
+        times.push(row[1]);
+        price.push(parseFloat(row[0].replace(',', '')));
+    });
+
+    price = price.reverse();
+    times = times.reverse();
+
+    var ctx = document.getElementById('todayLineChart').getContext('2d');
+    if (window.lineChart) {
+        window.lineChart.data.labels = times;
+        window.lineChart.data.datasets[0].data = price;
+        window.lineChart.update();
+    } else {
+        window.lineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: times,
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'Connecting Line',
+                        data: price,
+                        borderColor: 'rgba(0, 0, 0, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                        yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    }
+}
+
+
+function updateLastUpdate(last_update) {
+           var lastUpdateElement = $('#last-update');
+            lastUpdateElement.text('Last Update: ' + last_update);
+}
+
+// Fetch updated data and refresh the page
+        function fetchDataAndRefresh() {
+           $.getJSON('/updated', function (data) {
+                // Update the content on the page with the new data
+                updateLastUpdate(data.last_update);
+                updateDpagTable(data.data_dpag);
+                updateDpTable(data.data_dp);
+                updateDtTable(data.data_dt);
+                updateDpaTable(data.data_dpa);
+                updateBarChart(data.data_dt);
+            });
+        }
+
+        // Refresh the data every X minutes
+        setInterval(fetchDataAndRefresh, 60000);
+</script>
 </body>
 </html>
