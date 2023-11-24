@@ -7,6 +7,10 @@
     <title>Dollar Scraper</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+
 </head>
 <body>
     <div class="container">
@@ -89,7 +93,7 @@
         <div class="row mt-3">
             <div class="col-md-12">
                 <h2>Dollar Price History Table</h2>
-                <table class="table table-bordered">
+                <table id="dollar-price-table" class="table table-bordered">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dpa_col_names_map.values() %}
@@ -116,11 +120,16 @@
             </div>
         </div>
 
+        <!-- Dollar Price History Bar Chart -->
+        <div class="col-md-12">
+            <h2>Dollar Price Today Bar Chart</h2>
+            <canvas id="todayLineChart" height="200"></canvas>
+        </div>
         <!-- Dollar Today Table -->
         <div class="row mt-3">
-            <div class="col-md-12">
+            <div class="col-md-10">
                 <h2>Dollar Today</h2>
-                <table class="table table-bordered">
+                <table id="dollar-today-table" class="table table-bordered">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dt_col_names_map.values() %}
@@ -148,6 +157,52 @@
         </div>
 
     </div>
+
+<script>
+    // Assuming you have the necessary data for the bar chart
+    var times = [];
+    var price = [];
+
+    // Extract data for the bar chart from data_dpa
+    {% for row in scraper.data_dt %}
+    times.push("{{ row[1] }}");
+    price.push({{ row[0] | replace(',', '') }});
+    {% endfor %}
+
+    price = price.reverse();
+    times = times.reverse();
+
+    // Get the canvas element
+    var ctx = document.getElementById('todayLineChart').getContext('2d');
+
+    // Create the bar chart
+    var lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: times,
+            datasets: [
+
+                // Line dataset for connecting points
+                {
+                    type: 'line',
+                    label: 'Connecting Line',
+                    data: price,
+                    borderColor: 'rgba(0, 0, 0, 1)',
+                    borderWidth: 2,
+                    fill: false,
+                    yAxisID: 'y'
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+</script>
 
 <script>
     // Assuming you have the necessary data for the bar chart
@@ -224,6 +279,27 @@
         }
     });
 </script>
+
+<script>
+    $(document).ready( function () {
+        $('#dollar-price-table').DataTable({
+            "paging": true,
+            "pagingType": "simple",  // You can customize the pagination style
+            "pageLength": 10  // Set the number of rows per page
+        });
+    });
+</script>
+
+<script>
+    $(document).ready( function () {
+        $('#dollar-today-table').DataTable({
+            "paging": true,
+            "pagingType": "simple",  // You can customize the pagination style
+            "pageLength": 10  // Set the number of rows per page
+        });
+    });
+</script>
+
 
 </body>
 </html>

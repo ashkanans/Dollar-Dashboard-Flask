@@ -65,6 +65,7 @@ class Scraper:
         self.data_dt = []
         self.data_dpag = []
         self.last_update = None
+        self.force_reload = False
 
         self.p2e_table_names_map = {
             "عملکرد دلار": "Dollar Performance",
@@ -135,6 +136,8 @@ class Scraper:
             '۹': '9'
         }
 
+    def set_force_reload(self, value):
+        self.force_reload = value
     def scrape(self):
         english_to_persian_map = {value: key for key, value in self.p2e_table_names_map.items()}
         for tables_name in self.p2e_table_names_map.values():
@@ -267,6 +270,7 @@ class Scraper:
         self.p2e_dp_col_names_map['inserted_time'] = 'Inserted Time'
         self.p2e_dt_col_names_map['inserted_time'] = 'Inserted Time'
         self.p2e_dpag_col_names_map['inserted_time'] = 'Inserted Time'
+        self.set_force_reload(True)
     def _save_to_database(self, data, table_name):
         conn = sqlite3.connect('scraper_data.db')
         cursor = conn.cursor()
@@ -357,32 +361,32 @@ class Scraper:
         df.to_csv(output_folder + ".csv", sep='\t', index=False)
         print("Data saved to file.")
 
-    def save_to_database(self):
+    def load_from_database(self):
+        self.data_dpa = self._load_table_from_database("dpa")
+        self.data_dp = self._load_table_from_database("dp")
+        self.data_dt = self._load_table_from_database("dt")
+        self.data_dpag = self._load_table_from_database("dpag")
+
+    def _load_table_from_database(self, table_name):
         conn = sqlite3.connect('scraper_data.db')
         cursor = conn.cursor()
 
-        # Create a table if it doesn't exist
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS scraped_data (
-                open TEXT,
-                min TEXT,
-                max TEXT,
-                close TEXT,
-                change TEXT,
-                percent TEXT,
-                date TEXT,
-                date_shamsi TEXT
-            )
-        ''')
+        col_names_map = getattr(self, f"p2e_{table_name.lower()}_col_names_map", None)
+        if not col_names_map:
+            print(f"Error: Column names map not found for {table_name}.")
+            return []
 
-        # Insert data into the table
-        cursor.executemany('''
-            INSERT INTO scraped_data VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', self.data)
+        col_names_with_underscores = [col.replace(' ', '_') for col in col_names_map.values()]
 
-        conn.commit()
+        cursor.execute(f'SELECT * FROM {table_name}')
+        rows = cursor.fetchall()
+
+        data = []
+        for row in rows:
+            data.append([*row])
+
         conn.close()
-        print("Data saved to database.")
+        return data
 
     def show_data(self):
 

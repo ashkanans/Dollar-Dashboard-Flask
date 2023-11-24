@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 scraper = Scraper()
 scraper.scrape()
+scraper.load_from_database()
 
 
 # Define routes and corresponding functions
