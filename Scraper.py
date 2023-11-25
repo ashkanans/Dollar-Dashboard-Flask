@@ -46,6 +46,11 @@ def _find_tables_with_name(soup, tables_name):
                 b = tables_name in title.text.strip()
                 if table and tables_name in title.text.strip():
                     return table
+
+        elif tables_name == "دلار در روز جاری":
+            table = widget.find('div', class_='tables-data table-mobile-grid')
+            return table
+
         else:
             title = widget.find('h2')
 
@@ -71,7 +76,7 @@ class Scraper:
             "عملکرد دلار": "Dollar Performance",
             "دلار در یک نگاه": "Dollar at a Glance",
             "تاریخچه دلار": "Dollar Price Archive",
-            "دلار در روز جاری": "Dollar Today",
+            "دلار در روز جاری": "Dollar Today"
         }
         self.urls = {
             "Dollar at a Glance": "https://www.tgju.org/profile/price_dollar_rl",
@@ -79,6 +84,27 @@ class Scraper:
             "Dollar Today": "https://www.tgju.org/profile/price_dollar_rl/today",
             "Dollar Performance": "https://www.tgju.org/profile/price_dollar_rl/performance",
         }
+        self.params = {
+            "Dollar Performance": {},
+            "Dollar Today": {
+                'lang': 'fa',
+                'draw': 7,
+                'columns[0][data]': 0,
+                # Include other parameters as needed
+                'start': 1,
+                'length': 1000,
+                'search': '',
+                'today_table_tolerance_open': 1,
+                'today_table_tolerance_yesterday': 1,
+                'today_table_tolerance_range': 'week',
+                'order_col': '',
+                'order_dir': '',
+                '_': 1700672614146
+            },
+            "Dollar Price Archive": {},
+            "Dollar at a Glance": {}
+        }
+
         self.p2e_dpa_col_names_map = {
             "بازگشایی": "Opening",
             "کمترین": "Minimum",
@@ -86,11 +112,11 @@ class Scraper:
             "پایانی": "Closing",
             "میزان تغییر": "Change Amount",
             "درصد تغییر": "Percentage Change",
-            "تاریخ / میلادی": "Date Miladi",
-            "تاریخ / شمسی": "Date Shamsi",
+            "تاریخ / میلادی": "Date Gregorian",
+            "تاریخ / شمسی": "Date Solar",
         }
         self.p2e_dp_col_names_map = {
-            "نام": "Name",
+            "نام": "Date",
             "روز": "Day",
             "یک هفته": "One Week",
             "یک ماه": "One Month",
@@ -138,6 +164,7 @@ class Scraper:
 
     def set_force_reload(self, value):
         self.force_reload = value
+
     def scrape(self):
         english_to_persian_map = {value: key for key, value in self.p2e_table_names_map.items()}
         for tables_name in self.p2e_table_names_map.values():
@@ -260,7 +287,7 @@ class Scraper:
                                 cols_values[i] = '-' + str(cols_values[i])
 
                         # Add the date to the Time column
-                        cols_values[0] = f"{datetime.now().strftime('%Y-%m-%d')}_{cols_values[0]}"
+                        cols_values[0] = f"{datetime.now().strftime('%Y-%m-%d')}"
                         self.data_dp.append(cols_values)
                     self._save_to_database(self.data_dp, "dp")
 
@@ -292,9 +319,9 @@ class Scraper:
         if table_name == "dt":
             primary_key = "Time"
         elif table_name == "dp":
-            primary_key = "Name"
+            primary_key = "Date"
         elif table_name == "dpa":
-            primary_key = "Date_Shamsi"
+            primary_key = "Date_Solar"
         elif table_name == "dpag":
             primary_key = "Last_Rate_Registration_Time"
 
@@ -359,15 +386,20 @@ class Scraper:
         self.data_dt = self._load_table_from_database("dt")
         self.data_dpag = self._load_table_from_database("dpag")
 
-        self.data_dpa = sorted(self.data_dpa, key=lambda row: row[7], reverse=True)
+        self.data_dpa = sorted(self.data_dpa, key=lambda row: row[7])[-30:]
         self.data_dp = [self.data_dp[-1]]
-        self.data_dt = sorted(self.data_dt, key=lambda row: row[1])
+        self.data_dt = sorted(self.data_dt, key=lambda row: row[1])[-30:]
         self.data_dpag = [self.data_dpag[-1]]
 
         print(f"{len(self.data_dpa)} rows loaded from database for dpa.")
         print(f"{len(self.data_dp)} rows loaded from database for dp.")
         print(f"{len(self.data_dt)} rows loaded from database for dt.")
         print(f"{len(self.data_dpag)} rows loaded from database for dpag.")
+
+        self.p2e_dpa_col_names_map.pop('inserted_time', None)
+        self.p2e_dp_col_names_map.pop('inserted_time', None)
+        self.p2e_dt_col_names_map.pop('inserted_time', None)
+        self.p2e_dpag_col_names_map.pop('inserted_time', None)
 
     def _load_table_from_database(self, table_name):
         conn = sqlite3.connect('scraper_data.db')
@@ -380,12 +412,18 @@ class Scraper:
 
         col_names_with_underscores = [col.replace(' ', '_') for col in col_names_map.values()]
 
-        cursor.execute(f'SELECT * FROM {table_name}')
+        # Exclude 'inserted_time' from the list of columns
+        selected_columns = [col for col in col_names_with_underscores if col != 'Inserted_Time']
+
+        # Build the SQL query with the selected columns
+        query = f'SELECT {", ".join(selected_columns)} FROM {table_name}'
+
+        cursor.execute(query)
         rows = cursor.fetchall()
 
         data = []
         for row in rows:
-            data.append([*row])
+            data.append(list(row))
 
         conn.close()
         return data

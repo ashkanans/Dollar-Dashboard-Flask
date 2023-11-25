@@ -19,10 +19,10 @@ def get_updated_data():
     # Return updated data as JSON
     data = {
         'last_update': scraper.last_update,
-        'data_dpag': scraper.data_dpa,
+        'data_dpag': scraper.data_dpag,
         'data_dp': scraper.data_dp,
         'data_dt': scraper.data_dt,
-        'data_dpa': scraper.data_dpag
+        'data_dpa': scraper.data_dpa
     }
     return jsonify(data)
 

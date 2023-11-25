@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dollar Scraper</title>
+    <title>Dollar Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
@@ -16,7 +16,7 @@
     <div class="container">
         <div class="row mt-3">
             <div class="col-md-12">
-                <h1>Dollar Scraper</h1>
+                <h1>Dollar Dashboard</h1>
             </div>
         </div>
         <div class="row mt-3">
@@ -27,16 +27,16 @@
         <!-- Dollar at a Glance Table -->
         <div class="row mt-3">
             <div class="col-md-12">
-                <h2>Dollar at a Glance</h2>
-                <table id="dpag-table" class="table table-bordered">
+                <h2 class="text-center">Dollar at a Glance</h2>
+                <table id="dpag-table" class="table table-bordered text-center">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dpag_col_names_map.values() %}
                                 <th>{{ col }}</th>
                             {% endfor %}
                         </tr>
+                    </thead>
                     <tbody id="dpag-table-body">
-                    <tbody>
                         {% for row in data_dpag %}
                             <tr>
                                 {% for value in row %}
@@ -54,11 +54,12 @@
                 </table>
             </div>
         </div>
+
         <!-- Dollar Performance Table -->
         <div class="row mt-3">
             <div class="col-md-12">
-                <h2>Dollar Performance</h2>
-                <table id="dp-table" class="table table-bordered">
+                <h2 class="text-center">Dollar Performance</h2>
+                <table id="dp-table" class="table table-bordered text-center">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dp_col_names_map.values() %}
@@ -84,6 +85,7 @@
                 </table>
             </div>
         </div>
+
         <!-- Dollar Price History Bar Chart -->
         <div class="col-md-12">
             <h2>Dollar Price History Bar Chart</h2>
@@ -93,7 +95,7 @@
         <div class="row mt-3">
             <div class="col-md-12">
                 <h2>Dollar Price History Table</h2>
-                <table id="dpa-table" class="table table-bordered">
+                <table id="dpa-table" class="table table-bordered text-center">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dpa_col_names_map.values() %}
@@ -122,14 +124,14 @@
 
         <!-- Dollar Price History Bar Chart -->
         <div class="col-md-12">
-            <h2>Dollar Price Today Bar Chart</h2>
+            <h2>Dollar Price Today Line Chart</h2>
             <canvas id="todayLineChart" height="200"></canvas>
         </div>
         <!-- Dollar Today Table -->
         <div class="row mt-3">
-            <div class="col-md-10">
+            <div class="col-md-13">
                 <h2>Dollar Today</h2>
-                <table id="dt-table" class="table table-bordered">
+                <table id="dt-table" class="table table-bordered text-center">
                     <thead>
                         <tr>
                             {% for col in scraper.p2e_dt_col_names_map.values() %}
@@ -138,7 +140,7 @@
                         </tr>
                     </thead>
                     <tbody id="dt-table-body">
-                        {% for row in data_dt %}
+                        {% for row in data_dt|reverse %}
                             <tr>
                                 {% for value in row %}
                                     {% if '+' in value %}
@@ -168,9 +170,6 @@
     times.push("{{ row[1] }}");
     price.push({{ row[0] | replace(',', '') }});
     {% endfor %}
-
-    price = price.reverse();
-    times = times.reverse();
 
     // Get the canvas element
     var ctx = document.getElementById('todayLineChart').getContext('2d');
@@ -291,19 +290,20 @@
 </script>
 
 <script>
-    $(document).ready( function () {
+    $(document).ready(function () {
         $('#dt-table').DataTable({
             "paging": true,
-            "pagingType": "simple",  // You can customize the pagination style
-            "pageLength": 10  // Set the number of rows per page
+            "pagingType": "simple",
+            "pageLength": 10,
+            "order": [[1, "desc"]],
         });
     });
 </script>
 
 <script>
 // Function to update Dollar at a Glance Table-
-function updateDpTable(data) {
-    var tbody = $('#dp-table-body');
+function updateDpagTable(data) {
+    var tbody = $('#dpag-table-body');
     tbody.empty();  // Clear existing rows
 
     $.each(data, function (index, row) {
@@ -311,9 +311,10 @@ function updateDpTable(data) {
 
         $.each(row, function (index, value) {
             var td = $('<td>');
-            if ('+' in value) {
+            // Check if the value contains a '+' sign
+            if (value.includes('+')) {
                 td.css('background-color', 'lightgreen');
-            } else if ('-' in value && !(':' in value) && !('_' in value)) {
+            } else if (value.includes('-') && !value.includes(':')) {
                 td.css('background-color', 'lightcoral');
             }
             td.text(value);
@@ -324,9 +325,8 @@ function updateDpTable(data) {
     });
 }
 
-
-function updateDpagTable(data) {
-    var tbody = $('#dpag-table-body');
+function updateDpTable(data) {
+    var tbody = $('#dp-table-body');
     tbody.empty();  // Clear existing rows
 
     $.each(data, function (index, row) {
@@ -334,15 +334,46 @@ function updateDpagTable(data) {
 
         $.each(row, function (index, value) {
             var td = $('<td>');
-            if ('+' in value) {
+            // Check if the value contains a '+' sign
+            if (value.includes('+')) {
                 td.css('background-color', 'lightgreen');
-            } else if ('-' in value && !(':' in value)) {
+            } else if (value.includes('-') && !value.includes(':') && !value.includes('_')) {
                 td.css('background-color', 'lightcoral');
             }
             td.text(value);
             tr.append(td);
         });
+
+        tbody.append(tr);
     });
+}
+
+function updateDtTable(data) {
+    var tbody = $('#dt-table-body');
+    tbody.empty();  // Clear existing rows
+
+    $.each(data, function (index, row) {
+        var tr = $('<tr>');
+
+        $.each(row, function (index, value) {
+            var td = $('<td>');
+            // Check if the value contains a '+' sign
+            if (value.includes('+')) {
+                td.css('background-color', 'lightgreen');
+            } else if (value.includes('-') && !value.includes(':')) {
+                td.css('background-color', 'lightcoral');
+            }
+            td.text(value);
+            tr.append(td);
+        });
+
+        tbody.append(tr);
+    });
+        // Get existing DataTable instance for dt-table
+    var dpaTable = $('#dt-table').DataTable();
+
+    // Set the pageLength to 10
+    dpaTable.page.len(10).draw();
 }
 
 function updateDpaTable(data) {
@@ -354,10 +385,10 @@ function updateDpaTable(data) {
 
         $.each(row, function (index, value) {
             var td = $('<td>');
-            // Customize the styling logic based on your data
-            if ('+' in value) {
+            // Check if the value contains a '+' sign
+            if (value.includes('+')) {
                 td.css('background-color', 'lightgreen');
-            } else if ('-' in value && !(':' in value) && !('_' in value)) {
+            } else if (value.includes('-') && !value.includes(':') && !value.includes('_')) {
                 td.css('background-color', 'lightcoral');
             }
             td.text(value);
@@ -366,29 +397,11 @@ function updateDpaTable(data) {
 
         tbody.append(tr);
     });
-}
+    // Get existing DataTable instance for dpa-table
+    var dpaTable = $('#dpa-table').DataTable();
 
-
-function updateDtTable(data) {
-    var tbody = $('#dt-table-body');
-    tbody.empty();  // Clear existing rows
-
-    $.each(data, function (index, row) {
-        var tr = $('<tr>');
-
-        $.each(row, function (index, value) {
-            var td = $('<td>');
-            if ('+' in value) {
-                td.css('background-color', 'lightgreen');
-            } else if ('-' in value && !(':' in value)) {
-                td.css('background-color', 'lightcoral');
-            }
-            td.text(value);
-            tr.append(td);
-        });
-
-        tbody.append(tr);
-    });
+    // Set the pageLength to 10
+    dpaTable.page.len(10).draw();
 }
 
 
@@ -400,9 +413,6 @@ function updateBarChart(data) {
         times.push(row[1]);
         price.push(parseFloat(row[0].replace(',', '')));
     });
-
-    price = price.reverse();
-    times = times.reverse();
 
     var ctx = document.getElementById('todayLineChart').getContext('2d');
     if (window.lineChart) {
@@ -444,17 +454,21 @@ function updateLastUpdate(last_update) {
 }
 
 // Fetch updated data and refresh the page
-        function fetchDataAndRefresh() {
-           $.getJSON('/updated', function (data) {
-                // Update the content on the page with the new data
-                updateLastUpdate(data.last_update);
-                updateDpagTable(data.data_dpag);
-                updateDpTable(data.data_dp);
-                updateDtTable(data.data_dt);
-                updateDpaTable(data.data_dpa);
-                updateBarChart(data.data_dt);
-            });
+function fetchDataAndRefresh() {
+   $.getJSON('/updated', function (data) {
+        try {
+            // Update the content on the page with the new data
+            updateLastUpdate(data.last_update);
+            updateDpagTable(data.data_dpag);
+            updateDpTable(data.data_dp);
+            updateDtTable(data.data_dt);
+            updateDpaTable(data.data_dpa);
+            updateBarChart(data.data_dt);
+        } catch (error) {
+            console.error('Error updating data:', error);
         }
+    });
+}
 
         // Refresh the data every X minutes
         setInterval(fetchDataAndRefresh, 60000);
